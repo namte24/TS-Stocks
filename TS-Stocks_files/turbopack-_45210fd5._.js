@@ -34,9 +34,21 @@ const REEXPORTED_OBJECTS = new WeakMap();
 const contextPrototype = Context.prototype;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const toStringTag = typeof Symbol !== 'undefined' && Symbol.toStringTag;
+/**
+ * Define a property on an object if that object does not already have an own property with the same name.
+ * @param {Object} obj - Target object on which to define the property.
+ * @param {string|symbol} name - Property name or symbol.
+ * @param {PropertyDescriptor} options - Property descriptor passed to `Object.defineProperty`.
+ */
 function defineProp(obj, name, options) {
     if (!hasOwnProperty.call(obj, name)) Object.defineProperty(obj, name, options);
 }
+/**
+ * Ensure a module object exists in the module cache for the given id, creating and storing a new module object if none is present.
+ * @param {Object} moduleCache - Map from module id to module object.
+ * @param {string|number} id - Module identifier.
+ * @returns {Object} The module object associated with the id.
+ */
 function getOverwrittenModule(moduleCache, id) {
     let module = moduleCache[id];
     if (!module) {
@@ -48,7 +60,9 @@ function getOverwrittenModule(moduleCache, id) {
     return module;
 }
 /**
- * Creates the module object. Only done here to ensure all module objects have the same shape.
+ * Create a standardized module descriptor with canonical properties for runtime bookkeeping.
+ * @param {string|number} id - Module identifier assigned to the created module.
+ * @returns {{exports: Object, error: any|undefined, id: string|number, namespaceObject: Object|undefined}} The new module object with default properties.
  */ function createModuleObject(id) {
     return {
         exports: {},
@@ -59,7 +73,12 @@ function getOverwrittenModule(moduleCache, id) {
 }
 const BindingTag_Value = 0;
 /**
- * Adds the getters to the exports object.
+ * Install ES module-compatible properties onto an exports object and seal it.
+ *
+ * This marks the object as an ES module, optionally sets a Symbol.toStringTag of "Module", and defines each export either as a value property or as an accessor (getter, optionally with a setter) based on the provided bindings descriptor, then seals the exports object.
+ *
+ * @param {object} exports - The module exports object to populate.
+ * @param {Array} bindings - A flat descriptor array describing export entries. The array is interpreted as repeated tuples: [propName, tagOrGetter, (setterOrValue)?]. If `tagOrGetter` is the numeric tag `BindingTag_Value` the following item is the property value; otherwise `tagOrGetter` is treated as a getter function and an optional setter function may follow.
  */ function esm(exports, bindings) {
     defineProp(exports, '__esModule', {
         value: true
@@ -101,7 +120,10 @@ const BindingTag_Value = 0;
     Object.seal(exports);
 }
 /**
- * Makes the module an ESM with exports
+ * Mark the current module (or an overwritten module when `id` is provided) as an ES module and install the given exports.
+ *
+ * @param {Object} bindings - An object mapping export names to values or descriptors to install on the module's exports.
+ * @param {string|number|null} [id] - Optional overwritten module identifier; when provided, the target module is resolved from the overwrite map instead of using the current module.
  */ function esmExport(bindings, id) {
     let module;
     let exports;
@@ -116,6 +138,17 @@ const BindingTag_Value = 0;
     esm(exports, bindings);
 }
 contextPrototype.s = esmExport;
+/**
+ * Ensure the module uses a dynamic proxy namespace that can surface properties from re-exported objects.
+ *
+ * If the module has not yet been set up for dynamic re-exports, this replaces module.exports and
+ * module.namespaceObject with a Proxy that reflects the original exports while also exposing
+ * properties from objects added to the returned re-export list.
+ *
+ * @param {object} module - The module record to prepare for dynamic re-exports (will be mutated).
+ * @param {object} exports - The original exports object that the proxy should base its own properties on.
+ * @returns {object[]} The array used to track objects whose properties will be dynamically re-exported for the module.
+ */
 function ensureDynamicExports(module, exports) {
     let reexportedObjects = REEXPORTED_OBJECTS.get(module);
     if (!reexportedObjects) {
@@ -145,7 +178,12 @@ function ensureDynamicExports(module, exports) {
     return reexportedObjects;
 }
 /**
- * Dynamically exports properties from an object
+ * Register a source object's properties to be dynamically re-exported from this module or from a replaced module.
+ *
+ * When given an object, the function adds it to the module's dynamic reexport sources so its properties become available on the module's export namespace.
+ *
+ * @param {object} object - The source object whose properties should be re-exported; non-object values are ignored.
+ * @param {string|number} [id] - Optional id of an overwritten module whose exports will receive the dynamic reexports; when omitted, the current module is used.
  */ function dynamicExport(object, id) {
     let module;
     let exports;
@@ -162,6 +200,13 @@ function ensureDynamicExports(module, exports) {
     }
 }
 contextPrototype.j = dynamicExport;
+/**
+ * Assigns a value as the `exports` object for the current module or for an overwritten module when an id is provided.
+ *
+ * When `id` is not null, the function targets the overwritten module identified by `id` within this context; otherwise it sets the current context's module exports.
+ * @param {*} value - The value to assign to `module.exports`.
+ * @param {string|number|null} [id] - Optional identifier of an overwritten module to update; if omitted or `null`, the current module is used.
+ */
 function exportValue(value, id) {
     let module;
     if (id != null) {
@@ -172,6 +217,11 @@ function exportValue(value, id) {
     module.exports = value;
 }
 contextPrototype.v = exportValue;
+/**
+ * Assigns the provided namespace object as the module's exports and namespaceObject.
+ * @param {*} namespace - The namespace object to expose as the module's exports.
+ * @param {string|number|null|undefined} [id] - Optional overwritten module identifier; when provided, the target module is the overwritten module for this id, otherwise the current module is used.
+ */
 function exportNamespace(namespace, id) {
     let module;
     if (id != null) {
@@ -182,6 +232,12 @@ function exportNamespace(namespace, id) {
     module.exports = module.namespaceObject = namespace;
 }
 contextPrototype.n = exportNamespace;
+/**
+ * Create a zero-argument function that, when called, returns the current value of a property on an object.
+ * @param {Object} obj - The source object containing the property.
+ * @param {string|symbol} key - The property key to read from `obj`.
+ * @returns {Function} A function with no arguments that returns `obj[key]` when invoked.
+ */
 function createGetter(obj, key) {
     return ()=>obj[key];
 }
@@ -195,11 +251,15 @@ function createGetter(obj, key) {
     getProto(getProto)
 ];
 /**
- * @param raw
- * @param ns
- * @param allowExportDefault
- *   * `false`: will have the raw module as default export
- *   * `true`: will have the default property as default export
+ * Create and install ES module-style bindings on a namespace object from a raw export value.
+ *
+ * Populates the given `ns` with properties that mirror `raw` (preserving iteration order)
+ * and ensures a `default` export according to `allowExportDefault`.
+ *
+ * @param {*} raw - The original module export value (CommonJS or other raw export).
+ * @param {Object} ns - The namespace object to populate with ES module bindings.
+ * @param {boolean} allowExportDefault - If `true`, prefer `raw.default` as the namespace `default` export; if `false`, expose the entire `raw` object as the namespace `default`.
+ * @returns {Object} The provided `ns` object populated with ES module-compatible bindings.
  */ function interopEsm(raw, ns, allowExportDefault) {
     const bindings = [];
     let defaultLocation = -1;
@@ -225,6 +285,15 @@ function createGetter(obj, key) {
     esm(ns, bindings);
     return ns;
 }
+/**
+ * Create a namespace-like representation for a raw module export.
+ *
+ * If `raw` is a function, returns a wrapper function that forwards calls to the original function while preserving `this` and arguments.
+ * Otherwise returns a plain object with no prototype suitable for use as a namespace object.
+ *
+ * @param {*} raw - The raw export value to wrap or convert into a namespace.
+ * @returns {Function|Object} A function wrapper when `raw` is a function; otherwise a plain object with no prototype.
+ */
 function createNS(raw) {
     if (typeof raw === 'function') {
         return function(...args) {
@@ -234,6 +303,12 @@ function createNS(raw) {
         return Object.create(null);
     }
 }
+/**
+ * Ensures a resolved module has an ES module namespace and returns that namespace.
+ *
+ * @param {string|number} id - Module identifier to resolve relative to the current module.
+ * @returns {object} The module's namespace object.
+ */
 function esmImport(id) {
     const module = getOrInstantiateModuleFromParent(id, this.m);
     // any ES module has to have `module.namespaceObject` defined.
@@ -243,6 +318,11 @@ function esmImport(id) {
     return module.namespaceObject = interopEsm(raw, createNS(raw), raw && raw.__esModule);
 }
 contextPrototype.i = esmImport;
+/**
+ * Invoke the async loader registered for a module identifier.
+ * @param {string|number} moduleId - The identifier of the module to load.
+ * @returns {*} The value returned by the module's loader (typically a module namespace or loader-specific result).
+ */
 function asyncLoader(moduleId) {
     const loader = this.r(moduleId);
     return loader(esmImport.bind(this));
@@ -255,13 +335,33 @@ typeof require === 'function' ? require : function require1() {
     throw new Error('Unexpected use of runtime require');
 };
 contextPrototype.t = runtimeRequire;
+/**
+ * Require a CommonJS module by id relative to the current module and return its exports.
+ * @param {string|number} id - Identifier of the module to require.
+ * @returns {*} The required module's `exports` object.
+ */
 function commonJsRequire(id) {
     return getOrInstantiateModuleFromParent(id, this.m).exports;
 }
 contextPrototype.r = commonJsRequire;
 /**
- * `require.context` and require/import expression runtime.
+ * Create a require.context-like resolver for a fixed module map.
+ *
+ * The returned callable looks up modules by key and exposes utility methods:
+ * - `keys()` returns available keys.
+ * - `resolve(id)` returns the module's resolution id.
+ * - `import(id)` asynchronously imports the module.
+ *
+ * @param {Object<string, {module: function(): any, id: function(): string}>} map - Mapping from module key to an object with a `module()` factory and an `id()` resolver.
+ * @returns {function(string): any} A function that when called with a module key returns that module's exports and has `keys`, `resolve`, and `import` methods.
+ * @throws {Error} Throws an Error with `code = 'MODULE_NOT_FOUND'` if a requested key is not present in `map`.
  */ function moduleContext(map) {
+    /**
+     * Resolve a module identifier using the context map and return the module's exports.
+     * @param {string} id - The module identifier to resolve.
+     * @returns {*} The resolved module's exported value.
+     * @throws {Error} If the module id is not present in the context map; the error has `code = 'MODULE_NOT_FOUND'`.
+     */
     function moduleContext(id) {
         if (hasOwnProperty.call(map, id)) {
             return map[id].module();
@@ -288,16 +388,32 @@ contextPrototype.r = commonJsRequire;
 }
 contextPrototype.f = moduleContext;
 /**
- * Returns the path of a chunk defined by its data.
+ * Get the chunk path from chunk data.
+ * @param {string|{path: string}} chunkData - A chunk identifier: either a string path or an object containing a `path` property.
+ * @returns {string} The resolved chunk path.
  */ function getChunkPath(chunkData) {
     return typeof chunkData === 'string' ? chunkData : chunkData.path;
 }
+/**
+ * Determines whether a value is a thenable (Promise-like) object.
+ * @param {*} maybePromise - The value to test.
+ * @returns {boolean} `true` if the value is an object with a callable `then` property, `false` otherwise.
+ */
 function isPromise(maybePromise) {
     return maybePromise != null && typeof maybePromise === 'object' && 'then' in maybePromise && typeof maybePromise.then === 'function';
 }
+/**
+ * Determines whether a value represents a Turbopack async module extension.
+ * @param {*} obj - The value to test.
+ * @returns {boolean} `true` if the value is a Turbopack async module extension, `false` otherwise.
+ */
 function isAsyncModuleExt(obj) {
     return turbopackQueues in obj;
 }
+/**
+ * Create a promise together with its external resolve and reject functions.
+ * @returns {{promise: Promise<any>, resolve: (value?: any) => void, reject: (reason?: any) => void}} An object containing `promise`, and the `resolve` and `reject` functions that settle it. 
+ */
 function createPromise() {
     let resolve;
     let reject;
@@ -316,7 +432,20 @@ function createPromise() {
 // - 1 or more module ids
 // - a module factory function
 // So walking this is a little complex but the flat structure is also fast to
-// traverse, we can use `typeof` operators to distinguish the two cases.
+/**
+ * Registers module factory functions from a compressed chunk array into the runtime's module factory map.
+ *
+ * Parses chunkModules starting at the given offset where entries are laid out as one or more module ids
+ * followed by a factory function. For each group, the factory function is associated with every module id
+ * in that group and stored in moduleFactories. If a group's primary id already exists in moduleFactories,
+ * the entire group is skipped. Throws if the chunk format is malformed (no factory function found for a group).
+ *
+ * @param {Array<number|Function>} chunkModules - Array containing module ids (numbers) and factory functions; groups consist of one or more ids followed by their factory.
+ * @param {number} offset - Index in chunkModules at which parsing should begin.
+ * @param {Map<number, Function>} moduleFactories - Map to populate from module id to factory function.
+ * @param {(id:number)=>void} [newModuleId] - Optional callback invoked with each primary module id when a new factory is registered.
+ * @throws {Error} If a factory function is not found for a module id group (malformed chunk format).
+ */
 function installCompressedModuleFactories(chunkModules, offset, moduleFactories, newModuleId) {
     let i = offset;
     while(i < chunkModules.length){
@@ -348,6 +477,14 @@ function installCompressedModuleFactories(chunkModules, offset, moduleFactories,
 const turbopackQueues = Symbol('turbopack queues');
 const turbopackExports = Symbol('turbopack exports');
 const turbopackError = Symbol('turbopack error');
+/**
+ * Mark a pending queue as resolved and invoke any tasks whose countdown reaches zero.
+ *
+ * Decrements the `queueCount` of every function in `queue`. For each function whose
+ * count becomes zero as a result, invoke the function. Also sets `queue.status = 1`.
+ *
+ * @param {Array<Function> & { status?: number }} queue - Array of callables that have a mutable `queueCount` numeric property; may be falsy to no-op.
+ */
 function resolveQueue(queue) {
     if (queue && queue.status !== 1) {
         queue.status = 1;
@@ -355,6 +492,12 @@ function resolveQueue(queue) {
         queue.forEach((fn)=>fn.queueCount-- ? fn.queueCount++ : fn());
     }
 }
+/**
+ * Wraps dependency entries into Turbopack-compatible runtime wrappers.
+ *
+ * @param {Array<any>} deps - Array of dependency entries which may be plain values, Promises, or Turbopack async-module extension objects.
+ * @returns {Array<object>} An array of wrapper objects: plain values are wrapped as objects exposing `turbopackExports` and a no-op `turbopackQueues`; Promises are wrapped so that `turbopackExports` is populated when the promise settles and `turbopackError` is set on rejection while queued resolvers are invoked; objects that are already async-module extensions are returned unchanged.
+ */
 function wrapDeps(deps) {
     return deps.map((dep)=>{
         if (dep !== null && typeof dep === 'object') {
@@ -383,6 +526,18 @@ function wrapDeps(deps) {
         };
     });
 }
+/**
+ * Wraps a module body to provide asynchronous module semantics and replaces the module's exports and namespace with a promise-like exports object.
+ *
+ * The provided `body` is invoked with two helpers:
+ * - a dependency helper that accepts dependency descriptors and returns either the resolved dependency values or a promise that resolves to them when ready,
+ * - and a completion callback to resolve or reject the module-level exports promise.
+ *
+ * When `hasAwait` is true, the runtime installs a dependency queue to defer final resolution until async dependencies settle; the module's `exports` and `namespaceObject` are set to a promise-like object that carries Turbopack-specific metadata used by the runtime.
+ *
+ * @param {(handleDeps: (deps: any) => any, done: (err?: any) => void) => void} body - Module body invoked to execute module logic. It receives a dependency helper and a completion callback.
+ * @param {boolean} hasAwait - Whether the module contains `await` (or otherwise requires async deferral). When true, a dependency queue is enabled to coordinate resolution with dependent async modules.
+ */
 function asyncModule(body, hasAwait) {
     const module = this.m;
     const queue = hasAwait ? Object.assign([], {
@@ -473,18 +628,27 @@ contextPrototype.a = asyncModule;
 relativeURL.prototype = URL.prototype;
 contextPrototype.U = relativeURL;
 /**
- * Utility function to ensure all variants of an enum are handled.
+ * Assert unreachable code paths and raise an error with a computed message.
+ * @param {*} never - The value that should be impossible; passed to `computeMessage` to produce diagnostic context.
+ * @param {(val: any) => string} computeMessage - Function that returns the error message given the unexpected `never` value.
+ * @throws {Error} An error with the message prefixed by "Invariant: " produced by `computeMessage(never)`.
  */ function invariant(never, computeMessage) {
     throw new Error(`Invariant: ${computeMessage(never)}`);
 }
 /**
- * A stub function to make `require` available but non-functional in ESM.
+ * Provide a non-functional `require` placeholder for ESM environments.
+ *
+ * @throws {Error} Always throws when invoked to indicate dynamic `require` usage is not supported.
  */ function requireStub(_moduleId) {
     throw new Error('dynamic usage of require is not supported');
 }
 contextPrototype.z = requireStub;
 // Make `globalThis` available to the module in a way that cannot be shadowed by a local variable.
 contextPrototype.g = globalThis;
+/**
+ * Assigns a readable name to a module factory to improve stack traces.
+ * @param {Function} factory - The module factory function to rename.
+ */
 function applyModuleFactoryName(factory) {
     // Give the module factory a nice name to improve stack traces.
     Object.defineProperty(factory, 'name', {
@@ -522,6 +686,14 @@ const moduleFactories = new Map();
 contextPrototype.M = moduleFactories;
 const availableModules = new Map();
 const availableModuleChunks = new Map();
+/**
+ * Build a user-facing message explaining why a module's factory is missing.
+ *
+ * @param {string|number} moduleId - The identifier of the module.
+ * @param {number} sourceType - Numeric code describing instantiation source: `0` = runtime chunk entry, `1` = required from another module, `2` = HMR update.
+ * @param {string|number} sourceData - Additional context for the source: chunk path when `sourceType` is `0`, parent module id when `sourceType` is `1`, ignored when `sourceType` is `2`.
+ * @returns {string} A message stating how the module was instantiated and that its factory is not available.
+ */
 function factoryNotAvailableMessage(moduleId, sourceType, sourceData) {
     let instantiationReason;
     switch(sourceType){
@@ -539,13 +711,35 @@ function factoryNotAvailableMessage(moduleId, sourceType, sourceData) {
     }
     return `Module ${moduleId} was instantiated ${instantiationReason}, but the module factory is not available.`;
 }
+/**
+ * Loads the specified chunk using the caller module's id as the requesting context.
+ * @param {any} chunkData - Chunk descriptor (path, URL, or registration data) used to locate and register the chunk.
+ * @returns {any} The result produced by the internal chunk loader.
 function loadChunk(chunkData) {
     return loadChunkInternal(1, this.m.id, chunkData);
 }
 browserContextPrototype.l = loadChunk;
+/**
+ * Load and register an initial chunk identified by chunkPath.
+ * @param {string} chunkPath - Runtime path or identifier of the chunk to load.
+ * @param {*} chunkData - Chunk payload or registration data provided by the bootstrap (format consumed by the loader).
+ * @returns {*} The registration result produced by the internal chunk loader.
+ */
 function loadInitialChunk(chunkPath, chunkData) {
     return loadChunkInternal(0, chunkPath, chunkData);
 }
+/**
+ * Ensures the specified chunk and any modules or module-chunks it lists are loaded, skipping work for items already loaded or in-flight.
+ *
+ * If `chunkData` is a string, delegates to loadChunkPath. If `chunkData` is an object, it will:
+ * - honor `included` (module ids) and `moduleChunks` (chunk ids) to avoid redundant loads,
+ * - register loading promises in the runtime maps for deduplication,
+ * and wait for the necessary loads to complete before returning.
+ *
+ * @param {string} sourceType - Loader source type passed to the backend loader.
+ * @param {*} sourceData - Loader-specific data passed to loadChunkPath.
+ * @param {string|{path:string, included?:string[], moduleChunks?:string[]}} chunkData - Either a chunk path string or an object describing the chunk to load.
+ */
 async function loadChunkInternal(sourceType, sourceData, chunkData) {
     if (typeof chunkData === 'string') {
         return loadChunkPath(sourceType, sourceData, chunkData);
@@ -606,12 +800,24 @@ async function loadChunkInternal(sourceType, sourceData, chunkData) {
 }
 const loadedChunk = Promise.resolve(undefined);
 const instrumentedBackendLoadChunks = new WeakMap();
-// Do not make this async. React relies on referential equality of the returned Promise.
+/**
+ * Initiates loading of the chunk at the specified URL for the current module.
+ * @param {string} chunkUrl - The URL of the chunk to load.
+ * @returns {Promise<unknown>} Resolves when the chunk is successfully loaded and registered, rejects with an error if loading fails.
+ */
 function loadChunkByUrl(chunkUrl) {
     return loadChunkByUrlInternal(1, this.m.id, chunkUrl);
 }
 browserContextPrototype.L = loadChunkByUrl;
-// Do not make this async. React relies on referential equality of the returned Promise.
+/**
+ * Obtain a cached, instrumented loader promise for a chunk URL.
+ *
+ * @param {0|1|2} sourceType - Origin of the load: `0` = runtime dependency of a chunk, `1` = from a module, `2` = from an HMR update.
+ * @param {string|number} sourceData - Identifier associated with the source (chunk id, module id, or update id) used for error messages.
+ * @param {string} chunkUrl - URL of the chunk to load.
+ * @returns {Promise<any>} A promise that resolves to the loaded chunk entry produced by the backend.
+ * @throws {Error} When the backend fails to load the chunk; the error message includes the chunk URL and the load origin and the original error is set as the cause when available.
+ */
 function loadChunkByUrlInternal(sourceType, sourceData, chunkUrl) {
     const thenable = BACKEND.loadChunkCached(sourceType, chunkUrl);
     let entry = instrumentedBackendLoadChunks.get(thenable);
@@ -640,28 +846,41 @@ function loadChunkByUrlInternal(sourceType, sourceData, chunkUrl) {
     }
     return entry;
 }
-// Do not make this async. React relies on referential equality of the returned Promise.
+/**
+ * Load a chunk by its logical chunk path.
+ *
+ * Must not be declared `async` — callers (such as React) rely on referential equality of the returned Promise.
+ *
+ * @param {string} sourceType - Source type hint for the loader (environment-specific).
+ * @param {*} sourceData - Additional source metadata passed to the loader.
+ * @param {string} chunkPath - Logical path of the chunk to load.
+ * @returns {Promise<any>} The loader's result for the requested chunk.
 function loadChunkPath(sourceType, sourceData, chunkPath) {
     const url = getChunkRelativeUrl(chunkPath);
     return loadChunkByUrlInternal(sourceType, sourceData, url);
 }
 /**
- * Returns an absolute url to an asset.
+ * Resolve an asset path from the given module identifier.
+ * @param {string|number} moduleId - Module identifier to resolve.
+ * @returns {*} The module's default export (typically an asset URL) if present, otherwise the module's exported value.
  */ function resolvePathFromModule(moduleId) {
     const exported = this.r(moduleId);
     return exported?.default ?? exported;
 }
 browserContextPrototype.R = resolvePathFromModule;
 /**
- * no-op for browser
- * @param modulePath
+ * Produce an absolute runtime path for a module in browser environments.
+ * @param {string|undefined} modulePath - Module path relative to the runtime root; may be undefined or empty.
+ * @returns {string} The path prefixed with `/ROOT/`. If `modulePath` is undefined or empty, returns `/ROOT/`.
  */ function resolveAbsolutePath(modulePath) {
     return `/ROOT/${modulePath ?? ''}`;
 }
 browserContextPrototype.P = resolveAbsolutePath;
 /**
- * Returns a blob URL for the worker.
- * @param chunks list of chunks to load
+ * Create a blob URL for a worker script that bootstraps loading the provided chunks.
+ *
+ * @param {string[]} chunks - Array of chunk identifiers or paths used to compute chunk URLs to import in the worker.
+ * @returns {string} A blob URL pointing to a generated worker script which imports the specified chunks.
  */ function getWorkerBlobURL(chunks) {
     // It is important to reverse the array so when bootstrapping we can infer what chunk is being
     // evaluated by poping urls off of this array.  See `getPathFromScript`
@@ -677,15 +896,32 @@ importScripts(...self.TURBOPACK_NEXT_CHUNK_URLS.map(c => self.TURBOPACK_WORKER_L
 }
 browserContextPrototype.b = getWorkerBlobURL;
 /**
- * Instantiates a runtime module.
+ * Instantiate the specified runtime module from a runtime chunk.
+ * @param {number|string} moduleId - The id of the module to instantiate.
+ * @param {string} chunkPath - The runtime chunk path that contains the module.
+ * @returns {object} The instantiated module object (module record with its exports and metadata).
  */ function instantiateRuntimeModule(moduleId, chunkPath) {
     return instantiateModule(moduleId, 0, chunkPath);
 }
 /**
- * Returns the URL relative to the origin where a chunk can be fetched from.
+ * Constructs a relative URL path for a chunk by joining and URL-encoding its path segments.
+ * @param {string} chunkPath - The chunk path as '/'-separated segments (may include nested directories).
+ * @returns {string} The relative URL beginning with CHUNK_BASE_PATH and ending with CHUNK_SUFFIX_PATH where each segment is URL-encoded.
  */ function getChunkRelativeUrl(chunkPath) {
     return `${CHUNK_BASE_PATH}${chunkPath.split('/').map((p)=>encodeURIComponent(p)).join('/')}${CHUNK_SUFFIX_PATH}`;
 }
+/**
+ * Resolve a chunk's module path from a script element or a string input.
+ *
+ * If passed a string, the input is returned unchanged. If passed a script
+ * element, the function reads the chunk URL either from the global
+ * `TURBOPACK_NEXT_CHUNK_URLS` array (popping the last entry) or from the
+ * element's `src` attribute, then decodes the URL, removes any query string
+ * or fragment, and strips the CHUNK_BASE_PATH prefix when present.
+ *
+ * @param {string|Element} chunkScript - A chunk path string or the script element that loaded the chunk.
+ * @returns {string} The normalized chunk path with query/fragment removed and CHUNK_BASE_PATH trimmed when applicable.
+ */
 function getPathFromScript(chunkScript) {
     if (typeof chunkScript === 'string') {
         return chunkScript;
@@ -697,20 +933,37 @@ function getPathFromScript(chunkScript) {
 }
 const regexJsUrl = /\.js(?:\?[^#]*)?(?:#.*)?$/;
 /**
- * Checks if a given path/URL ends with .js, optionally followed by ?query or #fragment.
+ * Determines whether the provided path or URL refers to a JavaScript file (ends with `.js`, allowing an optional query string or fragment).
+ * @param {string} chunkUrlOrPath - The chunk path or URL to test.
+ * @returns {boolean} `true` if the path/URL ends with `.js` optionally followed by a query (`?`) or fragment (`#`), `false` otherwise.
  */ function isJs(chunkUrlOrPath) {
     return regexJsUrl.test(chunkUrlOrPath);
 }
 const regexCssUrl = /\.css(?:\?[^#]*)?(?:#.*)?$/;
 /**
- * Checks if a given path/URL ends with .css, optionally followed by ?query or #fragment.
+ * Determine whether the given path or URL refers to a CSS file.
+ *
+ * @param {string} chunkUrl - The path or URL to test.
+ * @returns {boolean} `true` if `chunkUrl` ends with `.css`, optionally followed by a query string or fragment, `false` otherwise.
  */ function isCss(chunkUrl) {
     return regexCssUrl.test(chunkUrl);
 }
+/**
+ * Instructs the runtime backend to load (and possibly instantiate) a WebAssembly asset for the specified chunk.
+ * @param {string} chunkPath - Path or identifier of the chunk containing the WebAssembly asset.
+ * @param {boolean} [edgeModule] - When true, treat the module as an edge-specific WebAssembly module (if supported by the backend).
+ * @param {Object} [importsObj] - Table of imports to provide to the WebAssembly module upon instantiation.
+ * @returns {any} The backend's load result (for example, a compiled/instantiated WebAssembly module or a backend-specific value). */
 function loadWebAssembly(chunkPath, edgeModule, importsObj) {
     return BACKEND.loadWebAssembly(1, this.m.id, chunkPath, edgeModule, importsObj);
 }
 contextPrototype.w = loadWebAssembly;
+/**
+ * Load a WebAssembly module for the specified chunk via the backend.
+ * @param {string} chunkPath - Path to the WebAssembly chunk to load.
+ * @param {boolean|any} [edgeModule] - Optional flag or metadata forwarded to the backend to indicate edge-module handling.
+ * @returns {any} The loaded WebAssembly module or a backend-specific load result.
+ */
 function loadWebAssemblyModule(chunkPath, edgeModule) {
     return BACKEND.loadWebAssemblyModule(1, this.m.id, chunkPath, edgeModule);
 }
@@ -771,7 +1024,14 @@ class UpdateApplyError extends Error {
  */ const queuedInvalidatedModules = new Set();
 /**
  * Gets or instantiates a runtime module.
- */ // @ts-ignore
+ */ /**
+ * Retrieve a runtime module from the dev cache or instantiate it for the given chunk.
+ *
+ * @param {string} chunkPath - Path of the runtime chunk that contains the module.
+ * @param {number|string} moduleId - Identifier of the module to retrieve or instantiate.
+ * @returns {object} The runtime module instance (module record) for the requested moduleId.
+ * @throws {*} The cached module's stored error if the cached module is in an errored state.
+ */
 function getOrInstantiateRuntimeModule(chunkPath, moduleId) {
     const module = devModuleCache[moduleId];
     if (module) {
@@ -805,11 +1065,25 @@ const getOrInstantiateModuleFromParent = (id, sourceModule)=>{
     }
     return instantiateModule(id, SourceType.Parent, sourceModule.id);
 };
+/**
+ * Creates a development module execution context that carries a refresh callback.
+ * @constructor
+ * @param {Function} refresh - Callback invoked to trigger a development refresh (used by runtime tooling to schedule module refresh/invalidation).
+ */
 function DevContext(module, exports, refresh) {
     Context.call(this, module, exports);
     this.k = refresh;
 }
 DevContext.prototype = Context.prototype;
+/**
+ * Create and initialize a development-time module instance for the given module id.
+ *
+ * @param {string|number} moduleId - The identifier of the module to instantiate.
+ * @param {Symbol} sourceType - The source origin of the instantiation (e.g., `SourceType.Runtime`, `SourceType.Parent`, `SourceType.Update`).
+ * @param {any} [sourceData] - Additional data for instantiation: when `SourceType.Parent` this is the parent module id; when `SourceType.Update` this is an array of parent ids (or undefined); ignored for runtime origins.
+ * @returns {object} The created module object containing at least `exports`, `parents`, `children`, and `hot`.
+ * @throws {Error} If no module factory is available for the given id (e.g., removed by an HMR update), or if executing the module factory throws. When execution fails, the thrown error is recorded on `module.error` before it is rethrown.
+ */
 function instantiateModule(moduleId, sourceType, sourceData) {
     // We are in development, this is always a string.
     let id = moduleId;
@@ -870,9 +1144,15 @@ const DUMMY_REFRESH_CONTEXT = {
     registerExports: (_module, _helpers)=>{}
 };
 /**
- * NOTE(alexkirsz) Webpack has a "module execution" interception hook that
- * Next.js' React Refresh runtime hooks into to add module context to the
- * refresh registry.
+ * Invoke a module's execution while wiring React Refresh interception hooks when present.
+ *
+ * If the global React Refresh intercept is installed, this calls it with the module id,
+ * executes the provided callback with a refresh context ({ register, signature, registerExports }),
+ * and always cleans up the intercept. If the intercept is not installed, the callback is
+ * invoked with a dummy refresh context.
+ *
+ * @param {object} module - The runtime module object (must include an `id` property) being executed.
+ * @param {(refreshContext: {register: Function, signature: Function, registerExports: Function}) => void} executeModule - Callback that performs the module execution.
  */ function runModuleExecutionHooks(module, executeModule) {
     if (typeof globalThis.$RefreshInterceptModuleExecution$ === 'function') {
         const cleanupReactRefreshIntercept = globalThis.$RefreshInterceptModuleExecution$(module.id);
@@ -894,7 +1174,22 @@ const DUMMY_REFRESH_CONTEXT = {
     }
 }
 /**
- * This is adapted from https://github.com/vercel/next.js/blob/3466862d9dc9c8bb3131712134d38757b918d1c0/packages/react-refresh-utils/internal/ReactRefreshModule.runtime.ts
+ * Registers a module's exports with React Refresh and configures Hot Module Replacement behavior
+ * for React Refresh boundaries, scheduling updates or invalidating the module as appropriate.
+ *
+ * This registers the current exports for React Refresh, marks the module as accepted when it
+ * forms a refresh boundary, preserves previous exports across updates to compare signatures,
+ * and either schedules a refresh update or invalidates the module when boundaries become
+ * incompatible.
+ *
+ * @param {object} module - The runtime module object. Expected shape: `{ exports, id, hot }`,
+ *   where `hot` exposes `.dispose(fn)`, `.accept()`, and `.invalidate()`.
+ * @param {object} helpers - React Refresh helper functions:
+ *   - `registerExportsForReactRefresh(exports, id)` to register exports,
+ *   - `isReactRefreshBoundary(exports)` to test boundary eligibility,
+ *   - `getRefreshBoundarySignature(exports)` to obtain a boundary signature,
+ *   - `shouldInvalidateReactRefreshBoundary(prevSig, nextSig)` to compare signatures,
+ *   - `scheduleUpdate()` to enqueue a refresh update when compatible.
  */ function registerExportsAndSetupBoundaryForReactRefresh(module, helpers) {
     const currentExports = module.exports;
     const prevExports = module.hot.data.prevExports ?? null;
@@ -938,9 +1233,23 @@ const DUMMY_REFRESH_CONTEXT = {
         }
     }
 }
+/**
+ * Format a dependency chain into a human-readable string.
+ * @param {string[]} dependencyChain - Ordered list of module identifiers representing the dependency chain.
+ * @returns {string} A string beginning with "Dependency chain: " followed by the chain items joined with " -> ".
+ */
 function formatDependencyChain(dependencyChain) {
     return `Dependency chain: ${dependencyChain.join(' -> ')}`;
 }
+/**
+ * Determine which modules are outdated given newly added and modified module entries and prepare new module factories.
+ *
+ * @param {Iterable<[string|number, any]>} added - Iterable of [moduleId, moduleEntry] pairs for modules added in the update; entries may be null to indicate no factory.
+ * @param {Iterable<[string|number, any]>} modified - Iterable of [moduleId, moduleEntry] pairs for modules that were modified in the update.
+ * @returns {{outdatedModules: Set<string|number>, newModuleFactories: Map<string|number, Function>}} An object containing:
+ *   - `outdatedModules`: the set of module ids determined to be outdated based on the modified entries,
+ *   - `newModuleFactories`: a Map from module id to the evaluated module factory function for added and modified entries.
+ */
 function computeOutdatedModules(added, modified) {
     const newModuleFactories = new Map();
     for (const [moduleId, entry] of added){
@@ -957,6 +1266,13 @@ function computeOutdatedModules(added, modified) {
         newModuleFactories
     };
 }
+/**
+ * Computes the set of modules that become outdated as a result of the given invalidated modules.
+ *
+ * @param {Iterable<string|number>} invalidated - Module IDs that were invalidated.
+ * @returns {Set<string|number>} A set containing IDs of modules that must be treated as outdated.
+ * @throws {UpdateApplyError} If any invalidated module is unaccepted or self-declined; the error includes the dependency chain.
+ */
 function computedInvalidatedModules(invalidated) {
     const outdatedModules = new Set();
     for (const moduleId of invalidated){
@@ -978,6 +1294,11 @@ function computedInvalidatedModules(invalidated) {
     }
     return outdatedModules;
 }
+/**
+ * Collects modules from the provided set that are self-accepted and not self-invalidated.
+ * @param {Iterable<number|string>} outdatedModules - Iterable of module IDs to inspect for self-acceptance.
+ * @returns {{moduleId: number|string, errorHandler: Function}[]} An array of objects each containing `moduleId` and `errorHandler` for modules that are self-accepted and not self-invalidated.
+ */
 function computeOutdatedSelfAcceptedModules(outdatedModules) {
     const outdatedSelfAcceptedModules = [];
     for (const moduleId of outdatedModules){
@@ -993,9 +1314,10 @@ function computeOutdatedSelfAcceptedModules(outdatedModules) {
     return outdatedSelfAcceptedModules;
 }
 /**
- * Adds, deletes, and moves modules between chunks. This must happen before the
- * dispose phase as it needs to know which modules were removed from all chunks,
- * which we can only compute *after* taking care of added and moved modules.
+ * Update chunk membership by adding modules to chunks and removing modules from chunks, then report modules removed from all chunks.
+ * @param {Iterable<[string, Iterable<string|number>]>} chunksAddedModules - Pairs of chunk path and an iterable of module IDs to add to that chunk.
+ * @param {Iterable<[string, Iterable<string|number>]>} chunksDeletedModules - Pairs of chunk path and an iterable of module IDs to remove from that chunk.
+ * @returns {{disposedModules: Set<string|number>}} An object containing `disposedModules`, a set of module IDs that were removed from all chunks.
  */ function updateChunksPhase(chunksAddedModules, chunksDeletedModules) {
     for (const [chunkPath, addedModuleIds] of chunksAddedModules){
         for (const moduleId of addedModuleIds){
@@ -1014,6 +1336,17 @@ function computeOutdatedSelfAcceptedModules(outdatedModules) {
         disposedModules
     };
 }
+/**
+ * Disposes modules scheduled for replacement or removal and records their previous parents.
+ *
+ * Invokes disposeModule for each id in `outdatedModules` with mode `"replace"` and for each id
+ * in `disposedModules` with mode `"clear"`, removes `outdatedModules` entries from the development
+ * module cache, and collects a map of each outdated module id to its former parents.
+ *
+ * @param {Iterable<string|number>} outdatedModules - Module ids that will be replaced.
+ * @param {Iterable<string|number>} disposedModules - Module ids that will be cleared.
+ * @returns {{outdatedModuleParents: Map<string|number, any>}} A map from each outdated module id to the module's previous `parents` value (or `undefined` if none).
+ */
 function disposePhase(outdatedModules, disposedModules) {
     for (const moduleId of outdatedModules){
         disposeModule(moduleId, 'replace');
@@ -1036,17 +1369,17 @@ function disposePhase(outdatedModules, disposedModules) {
     };
 }
 /**
- * Disposes of an instance of a module.
+ * Dispose a module instance and update its parents, children, and hot state.
  *
- * Returns the persistent hot data that should be kept for the next module
- * instance.
+ * Runs any registered dispose handlers with a persistent data object, marks the
+ * module's hot state inactive, removes the module from its children's parent
+ * lists, and either clears or preserves hot data based on the provided mode.
  *
- * NOTE: mode = "replace" will not remove modules from the devModuleCache
- * This must be done in a separate step afterwards.
- * This is important because all modules need to be disposed to update the
- * parent/child relationships before they are actually removed from the devModuleCache.
- * If this was done in this method, the following disposeModule calls won't find
- * the module from the module id in the cache.
+ * @param {string|number} moduleId - Identifier of the module instance to dispose.
+ * @param {'clear'|'replace'} mode - Disposal mode:
+ *   - `clear`: remove the module and its hot data from the dev cache and storage.
+ *   - `replace`: preserve the persistent hot data so it can be reused by the next module instance.
+ * @returns {Object|undefined} The persistent hot data to keep for the next module instance when `mode` is `replace`; otherwise `undefined`.
  */ function disposeModule(moduleId, mode) {
     const module = devModuleCache[moduleId];
     if (!module) {
@@ -1089,6 +1422,20 @@ function disposePhase(outdatedModules, disposedModules) {
             invariant(mode, (mode)=>`invalid mode: ${mode}`);
     }
 }
+/**
+ * Apply updated module factories and re-instantiate modules that self-accepted updates.
+ *
+ * Installs new module factories into the runtime, then attempts to re-run each module listed
+ * in `outdatedSelfAcceptedModules`. If a module throws during re-instantiation and an
+ * `errorHandler` was provided for that module, the handler is invoked with the thrown error
+ * and contextual info; any errors thrown by the handler or the original error are forwarded
+ * to `reportError`.
+ *
+ * @param {Array<{moduleId: number|string, errorHandler?: function}>} outdatedSelfAcceptedModules - Modules that accepted their own updates; each entry may include an `errorHandler` to handle instantiation errors for that module.
+ * @param {Map<number|string, Function>} newModuleFactories - Map of module IDs to new factory functions to install into the runtime.
+ * @param {Map<number|string, any>} outdatedModuleParents - Map providing parent/source data used when re-instantiating updated modules.
+ * @param {function(Error): void} reportError - Callback invoked with any errors that should be reported to the runtime.
+ */
 function applyPhase(outdatedSelfAcceptedModules, newModuleFactories, outdatedModuleParents, reportError) {
     // Update module factories.
     for (const [moduleId, factory] of newModuleFactories.entries()){
@@ -1118,6 +1465,10 @@ function applyPhase(outdatedSelfAcceptedModules, newModuleFactories, outdatedMod
         }
     }
 }
+/**
+ * Dispatches an update based on its `type` to the corresponding handler.
+ * @param {{type: string}} update - Update object with a `type` property; currently supports `'ChunkListUpdate'`.
+ */
 function applyUpdate(update) {
     switch(update.type){
         case 'ChunkListUpdate':
@@ -1127,6 +1478,16 @@ function applyUpdate(update) {
             invariant(update, (update)=>`Unknown update type: ${update.type}`);
     }
 }
+/**
+ * Apply a chunk list update by handling merged updates and per-chunk changes.
+ *
+ * Processes any merged update entries (delegating to the appropriate merged-update handler)
+ * and applies per-chunk actions such as loading, reloading, unloading, or validating partial instructions.
+ *
+ * @param {Object} update - Update payload describing merged updates and per-chunk changes.
+ * @param {Array<Object>} [update.merged] - Array of merged update descriptors (e.g., EcmascriptMergedUpdate).
+ * @param {Object<string, Object>} [update.chunks] - Map from chunk path to chunk update descriptor. Chunk update descriptors contain a `type` field with values like `"added"`, `"total"`, `"deleted"`, or `"partial"`.
+ */
 function applyChunkListUpdate(update) {
     if (update.merged != null) {
         for (const merged of update.merged){
@@ -1161,6 +1522,13 @@ function applyChunkListUpdate(update) {
         }
     }
 }
+/**
+ * Apply an ECMAScript merged update by computing changed modules, preparing outdated state, and performing the update lifecycle.
+ *
+ * @param {Object} update - Merged update payload describing module and chunk changes.
+ * @param {Object} [update.entries] - Map of entry updates keyed by module id or entry name.
+ * @param {Object} [update.chunks] - Map of chunk updates keyed by chunk path, describing added/modified/deleted modules per chunk.
+ */
 function applyEcmascriptMergedUpdate(update) {
     const { entries = {}, chunks = {} } = update;
     const { added, modified, chunksAdded, chunksDeleted } = computeChangedModules(entries, chunks);
@@ -1168,6 +1536,11 @@ function applyEcmascriptMergedUpdate(update) {
     const { disposedModules } = updateChunksPhase(chunksAdded, chunksDeleted);
     applyInternal(outdatedModules, disposedModules, newModuleFactories);
 }
+/**
+ * Merges any modules queued for invalidation into the provided set of outdated modules and clears the queue.
+ * @param {Set<number|string>} outdatedModules - Set of module ids to augment with queued invalidations.
+ * @returns {Set<number|string>} The same `outdatedModules` set with queued invalidated module ids added.
+ */
 function applyInvalidatedModules(outdatedModules) {
     if (queuedInvalidatedModules.size > 0) {
         computedInvalidatedModules(queuedInvalidatedModules).forEach((moduleId)=>{
@@ -1177,6 +1550,13 @@ function applyInvalidatedModules(outdatedModules) {
     }
     return outdatedModules;
 }
+/**
+ * Coordinates application of module updates by processing queued invalidations, disposing outdated modules, and installing new module factories.
+ * @param {Set<string|number>} outdatedModules - Set of module ids marked as outdated.
+ * @param {Array<string|number>} disposedModules - List of module ids that have been disposed prior to applying new factories.
+ * @param {Map<string|number,Function>} newModuleFactories - Mapping of module ids to their new factory functions to install.
+ * @throws {Error} Throws the first error encountered while applying updates after attempting all apply steps.
+ */
 function applyInternal(outdatedModules, disposedModules, newModuleFactories) {
     outdatedModules = applyInvalidatedModules(outdatedModules);
     const outdatedSelfAcceptedModules = computeOutdatedSelfAcceptedModules(outdatedModules);
@@ -1194,6 +1574,27 @@ function applyInternal(outdatedModules, disposedModules, newModuleFactories) {
         applyInternal(new Set(), [], new Map());
     }
 }
+/**
+ * Compute which modules and chunk mappings were added, deleted, or modified by a set of merged chunk updates.
+ *
+ * Builds maps of module IDs to their entry data for added and modified modules, a set of deleted module IDs,
+ * and maps of chunk paths to the sets of module IDs that were added to or removed from those chunks.
+ *
+ * @param {Object<string, any>} entries - Mapping from module ID to module entry metadata (new source/code).
+ * @param {Object<string, {type: string, modules?: string[], added?: string[], deleted?: string[]}>} updates - Merged chunk updates keyed by chunk path. Each update has a `type` of `"added" | "deleted" | "partial"` and corresponding module lists.
+ * @returns {{
+ *   added: Map<string, any>,
+ *   deleted: Set<string>,
+ *   modified: Map<string, any>,
+ *   chunksAdded: Map<string, Set<string>>,
+ *   chunksDeleted: Map<string, Set<string>>
+ * }} An object containing:
+ *   - `added`: map of module IDs added in this update to their entry data,
+ *   - `deleted`: set of module IDs removed in this update,
+ *   - `modified`: map of module IDs whose code changed (not newly added) to their entry data,
+ *   - `chunksAdded`: map of chunk paths to sets of module IDs added into those chunks,
+ *   - `chunksDeleted`: map of chunk paths to sets of module IDs removed from those chunks.
+ */
 function computeChangedModules(entries, updates) {
     const chunksAdded = new Map();
     const chunksDeleted = new Map();
@@ -1265,6 +1666,14 @@ function computeChangedModules(entries, updates) {
         chunksDeleted
     };
 }
+/**
+ * Determines the effect of updating a given module by walking its parent graph to find whether the update is accepted, self-declined, or unaccepted.
+ * @param {string|number} moduleId - The id of the module to analyze for update effects.
+ * @returns {{type: 'accepted', moduleId: string|number, outdatedModules: Set<string|number>} | {type: 'unaccepted', dependencyChain: Array<string|number>} | {type: 'self-declined', dependencyChain: Array<string|number>, moduleId: string|number}}
+ * - If `type` is `'accepted'`: `moduleId` is the originally inspected module and `outdatedModules` is the set of modules that must be replaced/re-executed.
+ * - If `type` is `'unaccepted'`: the update reached the runtime without any accept handlers; `dependencyChain` shows the path from the updated module to the runtime.
+ * - If `type` is `'self-declined'`: a module on the path explicitly declined its own update; `dependencyChain` gives the path to that module and `moduleId` is the declined module.
+ */
 function getAffectedModuleEffects(moduleId) {
     const outdatedModules = new Set();
     const queue = [
@@ -1336,6 +1745,18 @@ function getAffectedModuleEffects(moduleId) {
         outdatedModules
     };
 }
+/**
+ * Apply a chunk-list update by dispatching based on the update's type.
+ *
+ * Processes three update kinds:
+ * - "partial": applies the provided update instruction via applyUpdate.
+ * - "restart": triggers a full application restart via DEV_BACKEND.restart.
+ * - "notFound": if the chunk list is a runtime list, triggers restart; otherwise disposes the chunk list.
+ *
+ * @param {string} chunkListPath - The path/identifier of the chunk list being updated.
+ * @param {{type: 'partial', instruction: any} | {type: 'restart'} | {type: 'notFound'}} update - The update descriptor.
+ * @throws {Error} If `update.type` is not one of "partial", "restart", or "notFound".
+ */
 function handleApply(chunkListPath, update) {
     switch(update.type){
         case 'partial':
@@ -1369,6 +1790,23 @@ function handleApply(chunkListPath, update) {
             throw new Error(`Unknown update type: ${update.type}`);
     }
 }
+/**
+ * Create a Hot Module Replacement (HMR) API object and its associated state for a module.
+ *
+ * @param {string|number} moduleId - The identifier of the module the hot API is for.
+ * @param {Object} [hotData] - An optional data object that is preserved across module replacements and provided to dispose handlers.
+ * @returns {{hot: Object, hotState: {selfAccepted: boolean|Function, selfDeclined: boolean, selfInvalidated: boolean, disposeHandlers: Function[]}}}
+ * @description
+ * Returns an object with:
+ * - `hot`: a HMR management API exposing `active`, `data`, `accept`, `decline`, `dispose`,
+ *   `addDisposeHandler`, `removeDisposeHandler`, `invalidate`, `status`, `addStatusHandler`,
+ *   `removeStatusHandler`, and `check`. `accept` supports either no arguments (mark self-accepted)
+ *   or a function callback; `decline` supports no arguments (mark self-declined); `dispose` and
+ *   the handler methods manage dispose callbacks; `invalidate` marks the module as invalidated
+ *   and enqueues it for processing; `status` returns `"idle"` and `check` resolves to `null`.
+ * - `hotState`: a plain state container with `selfAccepted`, `selfDeclined`, `selfInvalidated`,
+ *   and `disposeHandlers` that reflect the current HMR state for the module.
+ */
 function createModuleHot(moduleId, hotData) {
     const hotState = {
         selfAccepted: false,
@@ -1433,8 +1871,11 @@ function createModuleHot(moduleId, hotData) {
     };
 }
 /**
- * Removes a module from a chunk.
- * Returns `true` if there are no remaining chunks including this module.
+ * Remove the mapping between a module and a chunk.
+ *
+ * @param {string|number} moduleId - Identifier of the module to remove.
+ * @param {string} chunkPath - Path of the chunk to remove the module from.
+ * @returns {boolean} `true` if the module is no longer included in any chunk, `false` otherwise.
  */ function removeModuleFromChunk(moduleId, chunkPath) {
     const moduleChunks = moduleChunksMap.get(moduleId);
     moduleChunks.delete(chunkPath);
@@ -1451,7 +1892,13 @@ function createModuleHot(moduleId, hotData) {
     return noRemainingChunks;
 }
 /**
- * Disposes of a chunk list and its corresponding exclusive chunks.
+ * Remove a chunk list registration and dispose any chunks that become unreferenced as a result.
+ * 
+ * Unregisters the chunk list from internal maps, removes the chunk list reference from each associated
+ * chunk, disposes chunks that are no longer referenced by any chunk list, and requests the backend to
+ * unload the chunk list asset so it can be reloaded later.
+ * @param {string} chunkListPath - The identifier/path of the chunk list to dispose.
+ * @returns {boolean} `true` if the chunk list was found and disposed, `false` if no registration existed.
  */ function disposeChunkList(chunkListPath) {
     const chunkPaths = chunkListChunksMap.get(chunkListPath);
     if (chunkPaths == null) {
@@ -1473,9 +1920,14 @@ function createModuleHot(moduleId, hotData) {
     return true;
 }
 /**
- * Disposes of a chunk and its corresponding exclusive modules.
+ * Unload a chunk and dispose modules that are no longer associated with any chunk.
  *
- * @returns Whether the chunk was disposed of.
+ * Triggers the runtime backend to unload the chunk's assets and removes the chunk from internal
+ * maps; any modules that become unreferenced by other chunks are disposed and removed from the
+ * available module registry.
+ *
+ * @param {string} chunkPath - The chunk path identifier to unload.
+ * @returns {boolean} `true` if the chunk was present and removed, `false` otherwise.
  */ function disposeChunk(chunkPath) {
     const chunkUrl = getChunkRelativeUrl(chunkPath);
     // This should happen whether the chunk has any modules in it or not.
@@ -1499,7 +1951,11 @@ function createModuleHot(moduleId, hotData) {
     return true;
 }
 /**
- * Adds a module to a chunk.
+ * Register a module as part of a chunk.
+ *
+ * Adds the chunkPath to the set of chunks for the given moduleId and adds the moduleId to the set of modules for the given chunkPath, updating the runtime's module/chunk maps.
+ * @param {string|number} moduleId - The module identifier to add to the chunk.
+ * @param {string} chunkPath - The chunk path to which the module should be added.
  */ function addModuleToChunk(moduleId, chunkPath) {
     let moduleChunks = moduleChunksMap.get(moduleId);
     if (!moduleChunks) {
@@ -1521,12 +1977,23 @@ function createModuleHot(moduleId, hotData) {
     }
 }
 /**
- * Marks a chunk list as a runtime chunk list. There can be more than one
- * runtime chunk list. For instance, integration tests can have multiple chunk
- * groups loaded at runtime, each with its own chunk list.
+ * Mark a chunk list as a runtime chunk list.
+ * Runtime chunk lists are treated as always loaded; multiple chunk lists may be marked as runtime.
+ * @param {string} chunkListPath - The chunk list path to mark as runtime.
  */ function markChunkListAsRuntime(chunkListPath) {
     runtimeChunkLists.add(chunkListPath);
 }
+/**
+ * Register a chunk described by a runtime registration array with the backend.
+ *
+ * The first element of `registration` is the script path used to derive the chunk path.
+ * If `registration` has exactly two elements the second is treated as runtime parameters
+ * and forwarded to the backend; otherwise the remainder is treated as compressed module
+ * factory data which will be installed before delegating to the backend.
+ *
+ * @param {Array} registration - Chunk registration array: [scriptPath, runtimeParams?] or a compressed factory payload starting at index 1.
+ * @returns {*} The value returned by BACKEND.registerChunk for the registered chunk.
+ */
 function registerChunk(registration) {
     const chunkPath = getPathFromScript(registration[0]);
     let runtimeParams;
@@ -1540,7 +2007,12 @@ function registerChunk(registration) {
     return BACKEND.registerChunk(chunkPath, runtimeParams);
 }
 /**
- * Subscribes to chunk list updates from the update server and applies them.
+ * Register a chunk list for update notifications and associate its chunks with runtime maps.
+ *
+ * @param {Object} chunkList - Chunk list descriptor.
+ * @param {string} chunkList.script - Script URL or identifier used to derive the chunk-list path.
+ * @param {Array<Object>} chunkList.chunks - Array of chunk descriptors; each entry is passed to getChunkPath to derive the chunk path.
+ * @param {string} [chunkList.source] - Optional source marker; when equal to `'entry'`, the chunk list is marked as a runtime chunk list.
  */ function registerChunkList(chunkList) {
     const chunkListScript = chunkList.script;
     const chunkListPath = getPathFromScript(chunkListScript);
@@ -1619,6 +2091,11 @@ let BACKEND;
             return await WebAssembly.compileStreaming(req);
         }
     };
+    /**
+     * Create or retrieve a resolver object that tracks loading state for a chunk URL.
+     * @param {string} chunkUrl - The chunk's URL used as the resolver key.
+     * @returns {{resolved: boolean, loadingStarted: boolean, promise: Promise<void>, resolve: function(): void, reject: function(*=): void}} The resolver: `resolved` indicates completion, `loadingStarted` marks if load began, `promise` settles when resolved/rejected, `resolve()` marks success, and `reject(reason)` marks failure.
+     */
     function getOrCreateResolver(chunkUrl) {
         let resolver = chunkResolvers.get(chunkUrl);
         if (!resolver) {
@@ -1643,9 +2120,13 @@ let BACKEND;
         return resolver;
     }
     /**
-   * Loads the given chunk, and returns a promise that resolves once the chunk
-   * has been loaded.
-   */ function doLoadChunk(sourceType, chunkUrl) {
+     * Start loading a chunk URL into the current environment and wait for it to become available.
+     *
+     * @param {SourceType} sourceType - Origin of the chunk (e.g., Runtime vs. normal); affects whether existing DOM assets are assumed present.
+     * @param {string} chunkUrl - The URL of the chunk to load.
+     * @returns {Promise<void>} Resolves when the chunk is loaded and ready for instantiation (CSS chunks are considered loaded once applied; JS chunks are considered loaded once their script has executed and registered). Rejects if the asset fails to load.
+     * @throws {Error} If the chunk type cannot be inferred from the URL in the current environment (worker vs DOM).
+     */ function doLoadChunk(sourceType, chunkUrl) {
         const resolver = getOrCreateResolver(chunkUrl);
         if (resolver.loadingStarted) {
             return resolver.promise;
@@ -1727,6 +2208,11 @@ let BACKEND;
         resolver.loadingStarted = true;
         return resolver.promise;
     }
+    /**
+     * Fetches a WebAssembly chunk using the runtime-resolved URL for the given chunk path.
+     * @param {string} wasmChunkPath - The runtime-local chunk path to resolve (e.g., relative chunk identifier).
+     * @returns {Promise<Response>} A promise that resolves to the fetch Response for the requested WebAssembly chunk.
+     */
     function fetchWebAssembly(wasmChunkPath) {
         return fetch(getChunkRelativeUrl(wasmChunkPath));
     }
@@ -1810,10 +2296,22 @@ let DEV_BACKEND;
         },
         restart: ()=>self.location.reload()
     };
+    /**
+     * Remove the resolver entry associated with a chunk URL.
+     * @param {string} chunkUrl - The chunk URL whose resolver should be deleted from the resolver map.
+     */
     function deleteResolver(chunkUrl) {
         chunkResolvers.delete(chunkUrl);
     }
 })();
+/**
+ * Evaluate a code string after appending a synthetic sourceURL and an optional inline source map to aid debugging.
+ *
+ * @param {string} code - The JavaScript source to evaluate.
+ * @param {string} url - Chunk-relative path used to construct the appended `sourceURL`.
+ * @param {string} [map] - Optional source map JSON; when provided it is encoded and appended as an inline `sourceMappingURL`.
+ * @returns {*} The value produced by executing the evaluated code.
+ */
 function _eval({ code, url, map }) {
     code += `\n\n//# sourceURL=${encodeURI(location.origin + CHUNK_BASE_PATH + url + CHUNK_SUFFIX_PATH)}`;
     if (map) {
