@@ -5,6 +5,13 @@ import { MARKET_OVERVIEW_WIDGET_CONFIG, HEATMAP_WIDGET_CONFIG,
  } from "@/lib/constants";
 
 
+/**
+ * Renders the Home page wrapper.
+ *
+ * Renders a full-height flex container with className "home-wrapper" that contains the text "Home".
+ *
+ * @returns A JSX element representing the Home page container.
+ */
 export default function Home() {
   const scriptUrl = "https://s3.tradingview.com/external-embedding/embed-widget-"
   return (
