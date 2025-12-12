@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# MongoDb  Username: namte password:aexpqhxV4RUWUBlv
