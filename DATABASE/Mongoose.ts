@@ -37,7 +37,7 @@ export const connectToDatabase = async () =>{
 
     console.log(`Connect to database ${process.env.NODE_ENV} ${MONGODB_URI}`)
 
-    //return cached.conn;
+    return cached.conn;
 }
 
 // This function will ensure that the app always conncets to MongoDB efficiently, becuase
