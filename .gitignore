@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# MongoDb  Username: namte password:aexpqhxV4RUWUBlvapp/api/inngest/
+components/ui/sonner.tsx
+lib/actions/
+lib/better-auth/
+lib/inngest/
+lib/nodemailer/
+app/api/inngest/
+.env.local
