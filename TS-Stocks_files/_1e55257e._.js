@@ -95,6 +95,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$clsx$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$tailwind$2d$merge$2f$dist$2f$bundle$2d$mjs$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/tailwind-merge/dist/bundle-mjs.mjs [app-client] (ecmascript)");
 ;
 ;
+/**
+ * Compose and merge Tailwind CSS class names.
+ * @param {...any} inputs - Class name values (strings, arrays, or objects) to be combined.
+ * @returns {string} The merged class names.
+ */
 function cn(...inputs) {
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$tailwind$2d$merge$2f$dist$2f$bundle$2d$mjs$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["twMerge"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$clsx$2f$dist$2f$clsx$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["clsx"])(inputs));
 }
@@ -148,6 +153,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$
 ;
 ;
 ;
+/**
+ * Renders a Radix DropdownMenu root element with a data-slot attribute and forwards all props to it.
+ * @param {object} props - Properties forwarded to the underlying Radix DropdownMenu Root.
+ * @returns {import('react').ReactElement} A React element representing the dropdown menu root.
+ */
 function DropdownMenu({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Root"], {
         "data-slot": "dropdown-menu",
@@ -159,6 +169,12 @@ function DropdownMenu({ ...props }) {
     }, this);
 }
 _c = DropdownMenu;
+/**
+ * Renders a Radix UI Portal configured for the dropdown menu.
+ *
+ * @param {object} props - Props to spread onto the underlying Portal element; common React element props (children, className, etc.) are accepted.
+ * @returns {JSX.Element} A Portal element with `data-slot="dropdown-menu-portal"` and the provided props applied.
+ */
 function DropdownMenuPortal({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Portal"], {
         "data-slot": "dropdown-menu-portal",
@@ -170,6 +186,12 @@ function DropdownMenuPortal({ ...props }) {
     }, this);
 }
 _c1 = DropdownMenuPortal;
+/**
+ * Renders a dropdown trigger element with a preset data-slot attribute and forwards all props to the trigger.
+ *
+ * @param {Object} props - Props forwarded to the trigger element (e.g., children, className, onClick).
+ * @returns {JSX.Element} The rendered dropdown trigger element.
+ */
 function DropdownMenuTrigger({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Trigger"], {
         "data-slot": "dropdown-menu-trigger",
@@ -181,6 +203,13 @@ function DropdownMenuTrigger({ ...props }) {
     }, this);
 }
 _c2 = DropdownMenuTrigger;
+/**
+ * Renders dropdown menu content inside a Portal with preset styling, animations, and layout behavior.
+ * @param {Object} props - Props forwarded to the Radix `Content` component.
+ * @param {string} [props.className] - Additional class names merged with the component's default classes.
+ * @param {number} [props.sideOffset=4] - Distance in pixels between the trigger and the content.
+ * @returns {JSX.Element} The Portal-wrapped dropdown content element.
+ */
 function DropdownMenuContent({ className, sideOffset = 4, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Portal"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Content"], {
@@ -200,6 +229,13 @@ function DropdownMenuContent({ className, sideOffset = 4, ...props }) {
     }, this);
 }
 _c3 = DropdownMenuContent;
+/**
+ * Renders a dropdown menu group wrapper that forwards all received props to the underlying Group element.
+ *
+ * Adds a `data-slot="dropdown-menu-group"` attribute to the rendered element and spreads remaining props onto it.
+ * @param {object} props - Props to pass through to the Group element (attributes, event handlers, children, etc.).
+ * @returns {JSX.Element} The rendered dropdown group element.
+ */
 function DropdownMenuGroup({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Group"], {
         "data-slot": "dropdown-menu-group",
@@ -211,6 +247,16 @@ function DropdownMenuGroup({ ...props }) {
     }, this);
 }
 _c4 = DropdownMenuGroup;
+/**
+ * Renders a styled dropdown menu item element.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional CSS class names to apply.
+ * @param {boolean} [props.inset] - If true, marks the item as inset (applies inset/left padding).
+ * @param {string} [props.variant="default"] - Visual variant to apply (e.g., "default", "destructive").
+ * @param {...any} [props.*] - Additional props are forwarded to the underlying Radix `Item` component.
+ * @returns {import('react').ReactElement} A React element representing a styled dropdown menu item.
+ */
 function DropdownMenuItem({ className, inset, variant = "default", ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Item"], {
         "data-slot": "dropdown-menu-item",
@@ -225,6 +271,16 @@ function DropdownMenuItem({ className, inset, variant = "default", ...props }) {
     }, this);
 }
 _c5 = DropdownMenuItem;
+/**
+ * Render a checkbox-style dropdown menu item that displays a check indicator when selected.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional CSS class names to apply to the item.
+ * @param {React.ReactNode} props.children - Content to display inside the menu item.
+ * @param {boolean} [props.checked] - Whether the checkbox item is checked.
+ * @param {Object} [props.props] - Additional props forwarded to the underlying CheckboxItem.
+ * @returns {JSX.Element} The rendered dropdown menu checkbox item.
+ */
 function DropdownMenuCheckboxItem({ className, children, checked, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CheckboxItem"], {
         "data-slot": "dropdown-menu-checkbox-item",
@@ -261,6 +317,12 @@ function DropdownMenuCheckboxItem({ className, children, checked, ...props }) {
     }, this);
 }
 _c6 = DropdownMenuCheckboxItem;
+/**
+ * Render a Radix RadioGroup configured for use inside the dropdown menu.
+ *
+ * @param {object} props - Props forwarded to the underlying RadioGroup component.
+ * @returns {import('react').ReactElement} A RadioGroup element with `data-slot="dropdown-menu-radio-group"` and the provided props.
+ */
 function DropdownMenuRadioGroup({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["RadioGroup"], {
         "data-slot": "dropdown-menu-radio-group",
@@ -272,6 +334,14 @@ function DropdownMenuRadioGroup({ ...props }) {
     }, this);
 }
 _c7 = DropdownMenuRadioGroup;
+/**
+ * Render a styled radio menu item with a circular selection indicator for use inside a dropdown menu.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional class names appended to the component's default styling.
+ * @param {import('react').ReactNode} [props.children] - Visible content of the menu item.
+ * @returns {import('react').ReactElement} A React element representing the dropdown radio item.
+ */
 function DropdownMenuRadioItem({ className, children, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["RadioItem"], {
         "data-slot": "dropdown-menu-radio-item",
@@ -307,6 +377,14 @@ function DropdownMenuRadioItem({ className, children, ...props }) {
     }, this);
 }
 _c8 = DropdownMenuRadioItem;
+/**
+ * Renders a styled label intended for placement inside the dropdown menu.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional CSS classes to apply to the label.
+ * @param {boolean} [props.inset] - If `true`, applies inset spacing (adds left padding).
+ * @returns {import('react').ReactElement} A dropdown menu label element with appropriate styling and inset support.
+ */
 function DropdownMenuLabel({ className, inset, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
         "data-slot": "dropdown-menu-label",
@@ -320,6 +398,14 @@ function DropdownMenuLabel({ className, inset, ...props }) {
     }, this);
 }
 _c9 = DropdownMenuLabel;
+/**
+ * Render a styled separator inside a dropdown menu.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional CSS classes to apply to the separator.
+ * @param {...any} [props.props] - Additional props forwarded to the underlying Separator element.
+ * @returns {JSX.Element} The rendered dropdown menu separator element.
+ */
 function DropdownMenuSeparator({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Separator"], {
         "data-slot": "dropdown-menu-separator",
@@ -332,6 +418,12 @@ function DropdownMenuSeparator({ className, ...props }) {
     }, this);
 }
 _c10 = DropdownMenuSeparator;
+/**
+ * Renders a styled span for displaying keyboard shortcuts in a dropdown menu.
+ *
+ * @param {object} props - Props forwarded to the underlying `span` element. The `className` prop, if provided, is merged with the default shortcut styles.
+ * @returns {JSX.Element} A `span` element styled as a dropdown-menu shortcut.
+ */
 function DropdownMenuShortcut({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
         "data-slot": "dropdown-menu-shortcut",
@@ -344,6 +436,12 @@ function DropdownMenuShortcut({ className, ...props }) {
     }, this);
 }
 _c11 = DropdownMenuShortcut;
+/**
+ * Renders a DropdownMenu Sub container and forwards received props to the underlying Radix `Sub` component.
+ *
+ * @param {object} props - Props passed through to the Radix `Sub` element (for example, children and accessibility attributes).
+ * @returns {JSX.Element} The Radix DropdownMenu `Sub` element.
+ */
 function DropdownMenuSub({ ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Sub"], {
         "data-slot": "dropdown-menu-sub",
@@ -355,6 +453,15 @@ function DropdownMenuSub({ ...props }) {
     }, this);
 }
 _c12 = DropdownMenuSub;
+/**
+ * Renders a submenu trigger element that displays provided children and a right-facing chevron.
+ *
+ * @param {Object} props
+ * @param {string} [props.className] - Additional class names to apply to the trigger.
+ * @param {boolean} [props.inset] - When true, applies inset spacing (adds left padding) to align with other inset items.
+ * @param {React.ReactNode} [props.children] - Content to display inside the trigger.
+ * @returns {JSX.Element} A dropdown submenu trigger element.
+ */
 function DropdownMenuSubTrigger({ className, inset, children, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SubTrigger"], {
         "data-slot": "dropdown-menu-sub-trigger",
@@ -378,6 +485,13 @@ function DropdownMenuSubTrigger({ className, inset, children, ...props }) {
     }, this);
 }
 _c13 = DropdownMenuSubTrigger;
+/**
+ * Renders a styled dropdown submenu content container.
+ *
+ * @param {string} className - Additional class names to merge with the default styling.
+ * @param {object} props - Remaining props are forwarded to the underlying Radix `SubContent` element.
+ * @returns {JSX.Element} The submenu content element with default styles and merged classes.
+ */
 function DropdownMenuSubContent({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$dropdown$2d$menu$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SubContent"], {
         "data-slot": "dropdown-menu-sub-content",
@@ -452,6 +566,19 @@ const buttonVariants = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_
         size: "default"
     }
 });
+/**
+ * Render a styled button element or a slot-wrapped child with configurable variant and size.
+ *
+ * Renders either a native `button` or a Radix `Slot` wrapper when `asChild` is true, and applies
+ * composed class names from the `buttonVariants` utility combined with an optional `className`.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} [props.className] - Additional class names to merge with the computed button classes.
+ * @param {"default"|"destructive"|"outline"|"secondary"|"ghost"|"link"} [props.variant] - Visual variant to apply.
+ * @param {"default"|"sm"|"lg"|"icon"|"icon-sm"|"icon-lg"} [props.size] - Size variant to apply.
+ * @param {boolean} [props.asChild=false] - If true, renders a Radix `Slot` so a child element can receive the button styles.
+ * @returns {import('react').JSX.Element} A React element for the button or slot-wrapped child with applied styling and props.
+ */
 function Button({ className, variant, size, asChild = false, ...props }) {
     const Comp = asChild ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$slot$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Slot"] : "button";
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Comp, {
@@ -494,6 +621,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$utils$2e$ts__$5b$app$
 ;
 ;
 ;
+/**
+ * Renders the avatar root element with default sizing, layout, and rounded styling.
+ *
+ * @param {string} [className] - Additional class names to merge with the component's defaults.
+ * @param {object} [props] - Props forwarded to the underlying Radix Avatar Root component.
+ * @returns {import('react').ReactElement} A React element representing the avatar root.
+ */
 function Avatar({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$avatar$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Root"], {
         "data-slot": "avatar",
@@ -506,6 +640,13 @@ function Avatar({ className, ...props }) {
     }, this);
 }
 _c = Avatar;
+/**
+ * Render the avatar image element with merged class names and a data-slot attribute.
+ *
+ * @param {object} props - Component props.
+ * @param {string} [props.className] - Additional CSS classes to merge with defaults.
+ * @returns {JSX.Element} The underlying Radix Avatar Image element with forwarded props.
+ */
 function AvatarImage({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$avatar$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Image"], {
         "data-slot": "avatar-image",
@@ -518,6 +659,13 @@ function AvatarImage({ className, ...props }) {
     }, this);
 }
 _c1 = AvatarImage;
+/**
+ * Renders an avatar fallback element displayed when the avatar image is not available.
+ *
+ * @param {object} props - Component props.
+ * @param {string} [props.className] - Additional class names to apply; merged with the component's default fallback styling.
+ * @returns {JSX.Element} The Radix Avatar Fallback element with combined styling and forwarded props.
+ */
 function AvatarFallback({ className, ...props }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$radix$2d$ui$2f$react$2d$avatar$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fallback"], {
         "data-slot": "avatar-fallback",

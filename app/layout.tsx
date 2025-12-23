@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   description: "Track all the real-time stock prices and get personalised results.",
 };
 
+/**
+ * Root layout component that renders the application's HTML document and body with configured fonts.
+ *
+ * @param children - The React nodes to render inside the document body.
+ * @returns The root HTML element containing a body with the Geist fonts and `antialiased` class applied.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
