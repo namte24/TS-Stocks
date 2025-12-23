@@ -47,3 +47,4 @@ lib/actions/
 lib/better-auth/
 lib/inngest/
 lib/nodemailer/
+app/api/inngest/
