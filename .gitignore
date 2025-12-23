@@ -48,3 +48,4 @@ lib/better-auth/
 lib/inngest/
 lib/nodemailer/
 app/api/inngest/
+.env.local
