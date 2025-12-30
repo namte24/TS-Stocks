@@ -5,7 +5,7 @@ import InputField from '@/components/forms/InputField'
 import SelectField from '@/components/forms/selectField'
 import { INVESTMENT_GOALS, PREFERRED_INDUSTRIES, RISK_TOLERANCE_OPTIONS } from '@/lib/constants'
 import { SubmitHandler, useForm } from 'react-hook-form'
-import { signUpwithEmail } from '@/lib/actions/auth_actions'
+import { signUpWithEmail } from '@/lib/actions/auth_actions'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -32,7 +32,7 @@ const SignUp = () => {
    })
   const onSubmit = async (data: SignUpFormData) => {
     try{
-      const result = await signUpwithEmail(data)
+      const result = await signUpWithEmail(data)
 
       if(result.success) router.push('/')
     }catch(e) {
