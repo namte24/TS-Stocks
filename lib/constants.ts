@@ -43,6 +43,7 @@ export const MARKET_OVERVIEW_WIDGET_CONFIG = {
     locale: 'en', // language
     largeChartUrl: '', // link to a large chart if needed
     isTransparent: true, // makes background transparent
+    theme: "dark",
     showFloatingTooltip: true, // show tooltip on hover
     plotLineColorGrowing: '#0FEDBE', // line color when price goes up
     plotLineColorFalling: '#0FEDBE', // line color when price falls
@@ -180,66 +181,48 @@ export const SYMBOL_INFO_WIDGET_CONFIG = (symbol: string) => ({
 });
 
 export const CANDLE_CHART_WIDGET_CONFIG = (symbol: string) => ({
-    allow_symbol_change: false,
-    calendar: false,
-    details: true,
-    hide_side_toolbar: true,
+    symbol: symbol.toUpperCase(),
+    interval: 'D',
+    timezone: 'Etc/UTC',
+    theme: 'dark', // Ensures dark mode text/axis
+    style: '1',
+    locale: 'en',
+    enable_publishing: false,
     hide_top_toolbar: false,
     hide_legend: false,
-    hide_volume: false,
-    hotlist: false,
-    interval: 'D',
-    locale: 'en',
     save_image: false,
-    style: 1,
-    symbol: symbol.toUpperCase(),
-    theme: 'dark',
-    timezone: 'Etc/UTC',
-    backgroundColor: '#141414',
-    gridColor: '#141414',
-    watchlist: [],
-    withdateranges: false,
-    compareSymbols: [],
-    studies: [],
-    width: '100%',
-    height: 600,
+    calendar: false,
+    hide_volume: false,
+    support_host: "https://www.tradingview.com",
+    autosize: true, // IMPORTANT: Use autosize instead of fixed dimensions inside the config
+    // Removed: backgroundColor, gridColor (these often conflict in embed mode)
 });
 
 export const BASELINE_WIDGET_CONFIG = (symbol: string) => ({
-    allow_symbol_change: false,
-    calendar: false,
-    details: false,
-    hide_side_toolbar: true,
+    symbol: symbol.toUpperCase(),
+    interval: 'D',
+    timezone: 'Etc/UTC',
+    theme: 'dark',
+    style: '10', // Baseline style
+    locale: 'en',
+    enable_publishing: false,
     hide_top_toolbar: false,
     hide_legend: false,
-    hide_volume: false,
-    hotlist: false,
-    interval: 'D',
-    locale: 'en',
     save_image: false,
-    style: 10,
-    symbol: symbol.toUpperCase(),
-    theme: 'dark',
-    timezone: 'Etc/UTC',
-    backgroundColor: '#141414',
-    gridColor: '#141414',
-    watchlist: [],
-    withdateranges: false,
-    compareSymbols: [],
-    studies: [],
-    width: '100%',
-    height: 600,
+    calendar: false,
+    hide_volume: false,
+    support_host: "https://www.tradingview.com",
+    autosize: true,
 });
 
 export const TECHNICAL_ANALYSIS_WIDGET_CONFIG = (symbol: string) => ({
     symbol: symbol.toUpperCase(),
     colorTheme: 'dark',
-    isTransparent: 'true',
+    isTransparent: true, // <--- CHANGED from 'true' to true
     locale: 'en',
     width: '100%',
     height: 400,
     interval: '1h',
-    largeChartUrl: '',
 });
 
 export const COMPANY_PROFILE_WIDGET_CONFIG = (symbol: string) => ({

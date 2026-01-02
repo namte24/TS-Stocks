@@ -1,7 +1,7 @@
 // TradingViewWidget.jsx
 "use client";
 import useTradingViewWidget from '@/hooks/useTradingViewWidget';
-import React, { useRef, memo } from 'react';
+import React, { memo } from 'react';
 
 interface TradingViewWidgetProps {
   title: string;

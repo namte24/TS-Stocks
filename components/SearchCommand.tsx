@@ -10,7 +10,7 @@ import { searchStocks } from "@/lib/actions/finnhub.actions"
 
 export default function SearchCommand({renderAs = 'button', label = 'Add Stock', initialStocks }: SearchCommandProps) {
     const [open, setOpen] = useState(false)
-    const [searchTerm, setSeacrhTerm] = useState("")
+    const [searchTerm, setSearchTerm] = useState("")
     const [loading, setLoading] = useState(false)
     const [stocks, setStocks] = useState<StockWithWatchlistStatus[]>(initialStocks)
 
@@ -51,7 +51,7 @@ export default function SearchCommand({renderAs = 'button', label = 'Add Stock',
 
     const handleSelectStock = () => {
         setOpen(false)
-        setSeacrhTerm("")
+        setSearchTerm("")
         setStocks(initialStocks)
     }
 
@@ -65,7 +65,7 @@ export default function SearchCommand({renderAs = 'button', label = 'Add Stock',
         )}
             <CommandDialog open={open} onOpenChange={setOpen} className="search-dialog">
                 <div className="search-field text-white">
-                    <CommandInput value={searchTerm} onValueChange={setSeacrhTerm} placeholder="Search Stocks" 
+                    <CommandInput value={searchTerm} onValueChange={setSearchTerm} placeholder="Search Stocks" 
                     className="search-input"/>
                     {loading && <Loader2 className="search-loader"/>}
                 </div>
