@@ -33,6 +33,7 @@ const SignUp = () => {
   const onSubmit = async (data: SignUpFormData) => {
     try{
       const result = await signUpWithEmail(data)
+      console.log("Server Response:", result);
 
       if(result.success) router.push('/')
     }catch(e) {
@@ -63,7 +64,7 @@ const SignUp = () => {
           required/>
   
           <SelectField 
-          name="investementGoals"
+          name="investmentGoals"
           label="Investment Goals"
           placeholder="Select your investment goals"
           options={INVESTMENT_GOALS}

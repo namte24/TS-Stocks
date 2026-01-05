@@ -1,13 +1,16 @@
-
 'use server';
 
 import {auth} from "@/lib/better-auth/auth";
 import {inngest} from "@/lib/inngest/client";
-import {headers} from "next/headers";
+import {headers} from "next/headers"; // Ensure this is imported
 
 export const signUpWithEmail = async ({ email, password, fullName, country, investmentGoals, riskTolerance, preferredIndustry }: SignUpFormData) => {
     try {
-        const response = await auth.api.signUpEmail({ body: { email, password, name: fullName } })
+        // FIXED: Added 'headers: await headers()' so the session cookie is set
+        const response = await auth.api.signUpEmail({ 
+            body: { email, password, name: fullName },
+            headers: await headers() 
+        })
 
         if(response) {
             await inngest.send({
@@ -25,7 +28,11 @@ export const signUpWithEmail = async ({ email, password, fullName, country, inve
 
 export const signInWithEmail = async ({ email, password }: SignInFormData) => {
     try {
-        const response = await auth.api.signInEmail({ body: { email, password } })
+        // FIXED: Added 'headers: await headers()' here too
+        const response = await auth.api.signInEmail({ 
+            body: { email, password },
+            headers: await headers() 
+        })
 
         return { success: true, data: response }
     } catch (e) {
