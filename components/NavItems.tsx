@@ -20,7 +20,7 @@ const NavItems = ({initialStocks}: {initialStocks: StockWithWatchlistStatus[]}) 
             if(label === "Search") return(
                 <li key="search-trigger">
                     <SearchCommand 
-                        render="text"
+                        renderAs="text"
                         label="Search"
                         initialStocks = {initialStocks}
                     

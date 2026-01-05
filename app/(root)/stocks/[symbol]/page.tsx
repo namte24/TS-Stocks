@@ -36,6 +36,7 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
           />
 
           <TradingViewWidget
+          title=""
             key={`${symbol}-baseline`} // <--- NEW KEY
             scriptUrl={`${scriptUrl}advanced-chart.js`}
             config={BASELINE_WIDGET_CONFIG(symbol)}
@@ -51,6 +52,7 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
           </div>
 
           <TradingViewWidget
+            title=""
             key={`${symbol}-tech`} // <--- NEW KEY
             scriptUrl={`${scriptUrl}technical-analysis.js`}
             config={TECHNICAL_ANALYSIS_WIDGET_CONFIG(symbol)}
@@ -58,6 +60,7 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
           />
 
           <TradingViewWidget
+            title=""
             key={`${symbol}-profile`} // <--- NEW KEY
             scriptUrl={`${scriptUrl}company-profile.js`}
             config={COMPANY_PROFILE_WIDGET_CONFIG(symbol)}
@@ -65,6 +68,7 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
           />
 
           <TradingViewWidget
+            title=""
             key={`${symbol}-financials`} // <--- NEW KEY
             scriptUrl={`${scriptUrl}financials.js`}
             config={COMPANY_FINANCIALS_WIDGET_CONFIG(symbol)}

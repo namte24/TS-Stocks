@@ -1,7 +1,7 @@
 "use client"
 import FooterLink from '@/components/forms/FooterLink'
 import InputField from '@/components/forms/InputField'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import {  useForm } from 'react-hook-form'
 
 const SignIn = () => {
    const {
